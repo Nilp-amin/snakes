@@ -7,8 +7,8 @@ from world import World
 if __name__ == "__main__":
     # pygame setup
     pygame.init()
-    cell_number = 15 
-    cell_size = 40 
+    cell_number = 15
+    cell_size = 120 
     screen = pygame.display.set_mode((cell_number * cell_size, cell_number * cell_size))
     clock = pygame.time.Clock()
     running = True
