@@ -11,6 +11,10 @@ if __name__ == "__main__":
     cell_size = 120 
     screen = pygame.display.set_mode((cell_number * cell_size, cell_number * cell_size))
     clock = pygame.time.Clock()
+
+    SCREEN_UPDATE = pygame.USEREVENT
+    pygame.time.set_timer(SCREEN_UPDATE, 150)
+
     running = True
     dt = 0
 
@@ -22,9 +26,9 @@ if __name__ == "__main__":
                 running = False 
             if event.type == pygame.KEYDOWN:
                 world.add_move(event.key)
-
-        # update the world on every tick
-        world.update(dt)
+            if event.type == pygame.USEREVENT:
+                # update the world on every time timer ticks 
+                world.update(dt)
 
         # flip the display to show changes to screen
         pygame.display.flip()
