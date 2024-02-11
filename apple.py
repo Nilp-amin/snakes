@@ -19,10 +19,8 @@ class Apple(pygame.sprite.Sprite):
         top_x = random.randint(0, (cell_number - 1)) * cell_size 
         top_y = random.randint(0, (cell_number - 1)) * cell_size 
         self.rect.center = (top_x + cell_size / 2, top_y + cell_size / 2)
-        self.rect.width = cell_size
-        self.rect.height = cell_size
 
-        print(self.rect)
+        print(f"apple: {self.rect}")
 
     def update(self) -> None:
         pass
