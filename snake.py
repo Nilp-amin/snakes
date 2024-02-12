@@ -7,7 +7,7 @@ import os
 import pygame
 
 class SnakeChunk(pygame.sprite.Sprite):
-    SCALE_FACTOR = 0.5
+    SCALE_FACTOR = 1.0
     def __init__(self, 
                  texture_map: Dict[Tuple[int, int], pygame.Surface],
                  cell_number: int, 
@@ -44,18 +44,20 @@ class SnakeChunk(pygame.sprite.Sprite):
         return self
 
     def shift_grid_xy(self, shift: pygame.Vector2) -> SnakeChunk:
-        self.image = self.texture_map[(int(shift.x), int(shift.y))]
-
         self.rect.x += (shift.x * self.cell_size)
         self.rect.y += (shift.y * self.cell_size)
 
         return self
 
+    def set_texture(self, shift: pygame.Vector2) -> SnakeChunk:
+        self.image = self.texture_map[tuple(shift)]
+        return self
+
     def get_grid_position(self) -> pygame.Vector2:
         # TODO: checkout pygame.Rect.move_ip()
         x, y = self.rect.center
-        return pygame.Vector2((x - self.cell_size / 2) / self.cell_size, 
-                              (y - self.cell_size / 2) / self.cell_size)
+        return pygame.Vector2(int((x - self.cell_size / 2) / self.cell_size), 
+                              int((y - self.cell_size / 2) / self.cell_size))
 
     def update(self) -> None:
         pass
@@ -73,6 +75,7 @@ class Snake(object):
         }
 
         # load texture map for snake body
+        # TODO: use the correct texture for 90 deg turns
         self.body_texture_map = {
             "default" : self.load_snake_texture("body_horizontal"),
             (1, 0) : self.load_snake_texture("body_horizontal"),
@@ -93,13 +96,12 @@ class Snake(object):
 
         # the body of the snake
         self.chunks = pygame.sprite.Group(
-            SnakeChunk(self.tail_texture_map, cell_number, cell_size, pygame.Vector2(2, 5)),
+            SnakeChunk(self.head_texture_map, cell_number, cell_size, pygame.Vector2(5, 5)),
+            SnakeChunk(self.body_texture_map, cell_number, cell_size, pygame.Vector2(4, 5)),
             SnakeChunk(self.body_texture_map, cell_number, cell_size, pygame.Vector2(3, 5)),
-            SnakeChunk(self.head_texture_map, cell_number, cell_size, pygame.Vector2(4, 5))
+            SnakeChunk(self.tail_texture_map, cell_number, cell_size, pygame.Vector2(2, 5))
         ) 
 
-        # the current direction of the head
-        self.current_direction = None
 
         # the current valid move given the current snake head direction
         self.valid_moves = {
@@ -109,8 +111,19 @@ class Snake(object):
             pygame.K_d : [pygame.K_w, pygame.K_s]
         }
 
+        # the shift in grid position given a key input
+        self.key_shift_map = {
+            pygame.K_w : pygame.Vector2(0, -1),
+            pygame.K_s : pygame.Vector2(0, 1),
+            pygame.K_a : pygame.Vector2(-1, 0),
+            pygame.K_d : pygame.Vector2(1, 0)
+        }
+
         self.cell_number = cell_number
         self.cell_size = cell_size
+
+        # the current direction of the head
+        self.current_direction = None
 
     def load_snake_texture(self, texture_name: str) -> pygame.Surface:
         return pygame.image.load(os.path.join(os.getcwd(), "textures", f"{texture_name}.png")).convert_alpha()
@@ -123,23 +136,33 @@ class Snake(object):
             self.current_direction = direction 
 
         if self.current_direction:
-            snake_chunks = self.chunks.sprites()
+            # TODO: combines these two for loops into a single for loop 
+            # first move chunks only
+            head_shift = self.key_shift_map[self.current_direction]
+            old_forward_chunk_pos = pygame.Vector2(0, 0)
             for i, snake_chunk in enumerate(self.chunks):
                 chunk_shift = pygame.Vector2(0, 0) 
-                if i == len(snake_chunks) - 1: # special case for the head of the snake
-                    if self.current_direction == pygame.K_w:
-                        chunk_shift = pygame.Vector2(0, -1)
-                    elif self.current_direction == pygame.K_s:
-                        chunk_shift = pygame.Vector2(0, 1)
-                    elif self.current_direction == pygame.K_a:
-                        chunk_shift = pygame.Vector2(-1, 0)
-                    elif self.current_direction == pygame.K_d:
-                        chunk_shift = pygame.Vector2(1, 0)
-                else:
-                    forward_snake_chunk = snake_chunks[i + 1]
-                    chunk_shift = forward_snake_chunk.get_grid_position() - snake_chunk.get_grid_position() 
 
+                if i == 0:
+                    chunk_shift = head_shift
+                else:
+                    chunk_shift = old_forward_chunk_pos - snake_chunk.get_grid_position() 
+
+                old_forward_chunk_pos = snake_chunk.get_grid_position()
                 snake_chunk.shift_grid_xy(chunk_shift)
+
+            # now correct chunk textures
+            forward_chunk_pos = pygame.Vector2(0, 0)
+            for i, snake_chunk in enumerate(self.chunks):
+                if i == 0:
+                    snake_chunk.set_texture(head_shift)
+                else:
+                    snake_chunk.set_texture(forward_chunk_pos - snake_chunk.get_grid_position())
+
+                forward_chunk_pos = snake_chunk.get_grid_position()
+
+
+
 
     def draw(self, surface: pygame.Surface) -> None:
         self.chunks.draw(surface)
