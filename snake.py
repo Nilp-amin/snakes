@@ -13,8 +13,7 @@ class SnakeChunk(pygame.sprite.Sprite):
                  cell_number: int, 
                  cell_size: int,
                  grid_pos: pygame.Vector2):
-        pygame.sprite.Sprite.__init__(self)
-
+        super().__init__()
 
         # correctly scale each of the textures once
         self.texture_map = dict()
@@ -26,7 +25,6 @@ class SnakeChunk(pygame.sprite.Sprite):
         self.image = self.texture_map["default"]
 
         self.rect = self.image.get_rect()
-        # TODO: make sure this is not the same position as the apple
         x, y = grid_pos
         top_x = x * cell_size 
         top_y = y * cell_size 
@@ -35,6 +33,12 @@ class SnakeChunk(pygame.sprite.Sprite):
         self.cell_number = cell_number
         self.cell_size = cell_size
 
+    def get_grid_position(self) -> pygame.Vector2:
+        # TODO: checkout pygame.Rect.move_ip()
+        x, y = self.rect.center
+        return pygame.Vector2(int((x - self.cell_size / 2) / self.cell_size), 
+                              int((y - self.cell_size / 2) / self.cell_size))
+
     def set_grid_position(self, position: pygame.Vector2) -> SnakeChunk:
         x, y = position
         top_x = x * self.cell_size 
@@ -42,6 +46,20 @@ class SnakeChunk(pygame.sprite.Sprite):
         self.rect.center = (top_x + self.cell_size / 2, top_y + self.cell_size / 2)
 
         return self
+
+    def shift_grid_xy(self, shift: pygame.Vector2) -> SnakeChunk:
+        raise NotImplementedError
+
+    def set_texture(self, shift: pygame.Vector2) -> SnakeChunk:
+        raise NotImplementedError
+
+class Head(SnakeChunk):
+    def __init__(self, 
+                 texture_map: Dict[Tuple[int, int], pygame.Surface],
+                 cell_number: int, 
+                 cell_size: int,
+                 grid_pos: pygame.Vector2):
+        super().__init__(texture_map, cell_number, cell_size, grid_pos)
 
     def shift_grid_xy(self, shift: pygame.Vector2) -> SnakeChunk:
         self.rect.x += (shift.x * self.cell_size)
@@ -53,14 +71,57 @@ class SnakeChunk(pygame.sprite.Sprite):
         self.image = self.texture_map[tuple(shift)]
         return self
 
-    def get_grid_position(self) -> pygame.Vector2:
-        # TODO: checkout pygame.Rect.move_ip()
-        x, y = self.rect.center
-        return pygame.Vector2(int((x - self.cell_size / 2) / self.cell_size), 
-                              int((y - self.cell_size / 2) / self.cell_size))
+class Body(SnakeChunk):
+    def __init__(self, 
+                 texture_map: Dict[Tuple[int, int], pygame.Surface],
+                 cell_number: int, 
+                 cell_size: int,
+                 grid_pos: pygame.Vector2):
+        super().__init__(texture_map, cell_number, cell_size, grid_pos)
 
-    def update(self) -> None:
-        pass
+        # the previous position in the grid of this chunk
+        self.prev_grid_position = grid_pos 
+
+    def shift_grid_xy(self, shift: pygame.Vector2) -> SnakeChunk:
+        self.prev_grid_position = self.get_grid_position()
+        self.rect.x += (shift.x * self.cell_size)
+        self.rect.y += (shift.y * self.cell_size)
+
+        return self
+
+    def set_texture(self, shift: pygame.Vector2) -> SnakeChunk:
+        previous_shift = self.get_grid_position() - self.prev_grid_position
+        if previous_shift != shift:
+            # makes sure the correct texture for the given symmetry is used
+            if abs(previous_shift.x) == 1:
+                total_shift = previous_shift + shift
+            elif abs(previous_shift.y) == 1:
+                total_shift = -previous_shift - shift
+        else:
+            total_shift = shift 
+
+        self.image = self.texture_map[tuple(total_shift)]
+
+        return self
+
+
+class Tail(SnakeChunk):
+    def __init__(self, 
+                 texture_map: Dict[Tuple[int, int], pygame.Surface],
+                 cell_number: int, 
+                 cell_size: int,
+                 grid_pos: pygame.Vector2):
+        super().__init__(texture_map, cell_number, cell_size, grid_pos)
+
+    def shift_grid_xy(self, shift: pygame.Vector2) -> SnakeChunk:
+        self.rect.x += (shift.x * self.cell_size)
+        self.rect.y += (shift.y * self.cell_size)
+
+        return self
+
+    def set_texture(self, shift: pygame.Vector2) -> SnakeChunk:
+        self.image = self.texture_map[tuple(shift)]
+        return self
 
 class Snake(object):
     def __init__(self, cell_number: int, cell_size: int):
@@ -81,7 +142,11 @@ class Snake(object):
             (1, 0) : self.load_snake_texture("body_horizontal"),
             (-1, 0) : self.load_snake_texture("body_horizontal"),
             (0, 1) : self.load_snake_texture("body_vertical"),
-            (0, -1) : self.load_snake_texture("body_vertical")
+            (0, -1) : self.load_snake_texture("body_vertical"),
+            (1, -1) : self.load_snake_texture("body_topleft"),
+            (1, 1) : self.load_snake_texture("body_bottomleft"),
+            (-1, -1) : self.load_snake_texture("body_topright"),
+            (-1, 1) : self.load_snake_texture("body_bottomright")
         }
 
         # load texture map for snake head
@@ -96,10 +161,10 @@ class Snake(object):
 
         # the body of the snake
         self.chunks = pygame.sprite.Group(
-            SnakeChunk(self.head_texture_map, cell_number, cell_size, pygame.Vector2(5, 5)),
-            SnakeChunk(self.body_texture_map, cell_number, cell_size, pygame.Vector2(4, 5)),
-            SnakeChunk(self.body_texture_map, cell_number, cell_size, pygame.Vector2(3, 5)),
-            SnakeChunk(self.tail_texture_map, cell_number, cell_size, pygame.Vector2(2, 5))
+            Head(self.head_texture_map, cell_number, cell_size, pygame.Vector2(5, 5)),
+            Body(self.body_texture_map, cell_number, cell_size, pygame.Vector2(4, 5)),
+            Body(self.body_texture_map, cell_number, cell_size, pygame.Vector2(3, 5)),
+            Tail(self.tail_texture_map, cell_number, cell_size, pygame.Vector2(2, 5))
         ) 
 
 

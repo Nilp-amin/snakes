@@ -8,13 +8,14 @@ from utils import clip
 class Apple(pygame.sprite.Sprite):
     SCALE_FACTOR = 0.5 
     def __init__(self, cell_number: int, cell_size: int):
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
 
         # load apple
         apple = pygame.image.load(os.path.join(os.getcwd(), "textures", "apple.png")).convert_alpha()
         self.image = pygame.transform.scale(clip(apple, 7, 3, 34, 36), ((cell_size) * Apple.SCALE_FACTOR, 
                                                            cell_size * Apple.SCALE_FACTOR))
 
+        # TODO: make sure this is not the same position as the snake 
         self.rect = self.image.get_rect()
         top_x = random.randint(0, (cell_number - 1)) * cell_size 
         top_y = random.randint(0, (cell_number - 1)) * cell_size 
