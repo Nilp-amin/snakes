@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from typing import Dict, Tuple
+from typing import List, Dict, Tuple
 
 import os
 import pygame
@@ -89,6 +89,12 @@ class Body(SnakeChunk):
 
         return self
 
+    def get_previous_grid_position(self) -> pygame.Vector2:
+        return self.prev_grid_position
+
+    def set_previous_grid_position(self, grid_pos: pygame.Vector2) -> None:
+        self.prev_grid_position = grid_pos
+
     def set_texture(self, shift: pygame.Vector2) -> SnakeChunk:
         previous_shift = self.get_grid_position() - self.prev_grid_position
         if previous_shift != shift:
@@ -124,8 +130,10 @@ class Tail(SnakeChunk):
         return self
 
 class Snake(object):
-    def __init__(self, cell_number: int, cell_size: int):
-
+    def __init__(self, 
+                 collidable: pygame.sprite.Group, 
+                 cell_number: int, 
+                 cell_size: int):
         # load texture map for snake tail
         self.tail_texture_map = {
             "default" : self.load_snake_texture("tail_left"),
@@ -136,7 +144,6 @@ class Snake(object):
         }
 
         # load texture map for snake body
-        # TODO: use the correct texture for 90 deg turns
         self.body_texture_map = {
             "default" : self.load_snake_texture("body_horizontal"),
             (1, 0) : self.load_snake_texture("body_horizontal"),
@@ -158,15 +165,14 @@ class Snake(object):
             (0, -1) : self.load_snake_texture("head_up")
         }
 
-
         # the body of the snake
-        self.chunks = pygame.sprite.Group(
+        self.chunks = [ 
             Head(self.head_texture_map, cell_number, cell_size, pygame.Vector2(5, 5)),
             Body(self.body_texture_map, cell_number, cell_size, pygame.Vector2(4, 5)),
-            Body(self.body_texture_map, cell_number, cell_size, pygame.Vector2(3, 5)),
-            Tail(self.tail_texture_map, cell_number, cell_size, pygame.Vector2(2, 5))
-        ) 
+            Tail(self.tail_texture_map, cell_number, cell_size, pygame.Vector2(3, 5))
+        ]
 
+        self.chunks_group = pygame.sprite.Group(self.chunks)
 
         # the current valid move given the current snake head direction
         self.valid_moves = {
@@ -186,14 +192,25 @@ class Snake(object):
 
         self.cell_number = cell_number
         self.cell_size = cell_size
+        self.collidable = collidable
+
+        # add snake chunks to colliadable
+        self.collidable.add(self.chunks[1:])
 
         # the current direction of the head
         self.current_direction = None
 
+    def get_head(self) -> Head:
+        return self.chunks[0]
+
+    def get_chunks(self) -> List[SnakeChunk]:
+        return self.chunks
+
     def load_snake_texture(self, texture_name: str) -> pygame.Surface:
         return pygame.image.load(os.path.join(os.getcwd(), "textures", f"{texture_name}.png")).convert_alpha()
 
-    def advance_snake(self, direction: int) -> None:
+    def advance_snake(self, direction: int, add_chunk: bool = False) -> None:
+        # FIXME: check key_shift_map for very first move as well...not allow it to go on itself
         # make sure the direction isn't 180 deg opposite to curr dir
         if self.current_direction is None:
             self.current_direction = direction 
@@ -201,11 +218,18 @@ class Snake(object):
             self.current_direction = direction 
 
         if self.current_direction:
+            chunks = self.chunks
+
+            # make sure the current number of chunks are updated based on if a chunk needs to be added or not 
+            if add_chunk:
+                self.increase_size()
+                chunks = self.chunks[:2]
+
             # TODO: combines these two for loops into a single for loop 
             # first move chunks only
             head_shift = self.key_shift_map[self.current_direction]
             old_forward_chunk_pos = pygame.Vector2(0, 0)
-            for i, snake_chunk in enumerate(self.chunks):
+            for i, snake_chunk in enumerate(chunks):
                 chunk_shift = pygame.Vector2(0, 0) 
 
                 if i == 0:
@@ -218,7 +242,7 @@ class Snake(object):
 
             # now correct chunk textures
             forward_chunk_pos = pygame.Vector2(0, 0)
-            for i, snake_chunk in enumerate(self.chunks):
+            for i, snake_chunk in enumerate(chunks):
                 if i == 0:
                     snake_chunk.set_texture(head_shift)
                 else:
@@ -226,8 +250,14 @@ class Snake(object):
 
                 forward_chunk_pos = snake_chunk.get_grid_position()
 
+    def increase_size(self) -> None:
+        # TODO: add logic to increase length of snake if edible is collided with
+        body_chunk = Body(self.body_texture_map, self.cell_number, self.cell_size, self.chunks[1].get_grid_position())
+        body_chunk.set_previous_grid_position(self.chunks[1].get_previous_grid_position())
 
-
+        self.chunks.insert(1, body_chunk)
+        self.chunks_group.add(body_chunk)
+        self.collidable.add(body_chunk)
 
     def draw(self, surface: pygame.Surface) -> None:
-        self.chunks.draw(surface)
+        self.chunks_group.draw(surface)
