@@ -3,6 +3,7 @@ import sys
 import pygame
 
 from apple import Apple
+from boundry import Boundry
 from snake import Snake
 
 from collections import deque
@@ -16,7 +17,6 @@ class World(object):
         self._screen = screen
         self.cell_number = cell_number
         self.cell_size = cell_size
-
         
         # the apple object
         apple = Apple(cell_number, cell_size)
@@ -30,6 +30,9 @@ class World(object):
 
         # the snake object
         self.snake = Snake(self.collidable, cell_number, cell_size)
+
+        # the boundry object
+        self.boundry = Boundry(self.collidable, cell_number, cell_size) 
 
         # queues the moves to be done in order
         self.move_queue = deque([]) 

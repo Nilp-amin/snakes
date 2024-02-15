@@ -12,7 +12,7 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
 
     SCREEN_UPDATE = pygame.USEREVENT
-    pygame.time.set_timer(SCREEN_UPDATE, 150)
+    pygame.time.set_timer(SCREEN_UPDATE, 100)
 
     running = True
     dt = 0
