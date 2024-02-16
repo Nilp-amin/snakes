@@ -22,7 +22,6 @@ class World(object):
         apple = Apple(cell_number, cell_size)
 
         # stores objects which cause collision
-        # TODO: add walls to stop snake from going out of the screen
         self.collidable = pygame.sprite.Group(apple) 
 
         # stores the objects which can be eaten 
@@ -50,8 +49,10 @@ class World(object):
         if colliding_sprites:
             for colliding_sprite in colliding_sprites:
                 if isinstance(colliding_sprite, type(self.edible.sprite)):
-                    # FIXME: add the positions of the snake chunks
-                    colliding_sprite.set_random_position(set(pygame.Vector2(0.0)))
+                    # FIXME: add position of the score box
+                    invalid_positions = set((chunk.get_grid_position().x, 
+                                             chunk.get_grid_position().y) for chunk in self.snake.get_chunks())
+                    colliding_sprite.set_random_position(invalid_positions)
                     ate = True
                 else: # invalid collision detected
                     self.game_over = True
@@ -70,7 +71,7 @@ class World(object):
                     grass_rect = pygame.Rect(row * self.cell_size, col * self.cell_size, self.cell_size, self.cell_size)
                     pygame.draw.rect(self._screen, World.GRASS_COLOUR, grass_rect)
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float) -> bool:
         # FIXME: this needs to be here so that when eating a food that causes
         # extension of snake to overlap itself it ends immediatly
         ate = self.check_for_collisions()
@@ -88,3 +89,5 @@ class World(object):
         self.draw_background()
         self.edible.draw(self._screen)
         self.snake.draw(self._screen)
+
+        return ate

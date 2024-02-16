@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from typing import List, Dict, Tuple
-
 import os
 import pygame
+
+from typing import List, Dict, Tuple
 
 class SnakeChunk(pygame.sprite.Sprite):
     SCALE_FACTOR = 1.0
@@ -34,12 +34,12 @@ class SnakeChunk(pygame.sprite.Sprite):
         self.cell_size = cell_size
 
     def get_grid_position(self) -> pygame.Vector2:
-        # TODO: checkout pygame.Rect.move_ip()
         x, y = self.rect.center
         return pygame.Vector2(int((x - self.cell_size / 2) / self.cell_size), 
                               int((y - self.cell_size / 2) / self.cell_size))
 
     def set_grid_position(self, position: pygame.Vector2) -> SnakeChunk:
+        # TODO: checkout pygame.Rect.move_ip()
         x, y = position
         top_x = x * self.cell_size 
         top_y = y * self.cell_size 
@@ -251,8 +251,10 @@ class Snake(object):
                 forward_chunk_pos = snake_chunk.get_grid_position()
 
     def increase_size(self) -> None:
-        # TODO: add logic to increase length of snake if edible is collided with
-        body_chunk = Body(self.body_texture_map, self.cell_number, self.cell_size, self.chunks[1].get_grid_position())
+        body_chunk = Body(self.body_texture_map, 
+                          self.cell_number, 
+                          self.cell_size, 
+                          self.chunks[1].get_grid_position())
         body_chunk.set_previous_grid_position(self.chunks[1].get_previous_grid_position())
 
         self.chunks.insert(1, body_chunk)
