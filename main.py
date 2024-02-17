@@ -31,8 +31,8 @@ if __name__ == "__main__":
                 world.set_direction(event.key)
             if event.type == pygame.USEREVENT:
                 # update the world on every time timer ticks 
-                update_score = world.update(dt)
-                score_manager.update(update_score)
+                score = world.update(dt)
+                score_manager.update(score)
 
         # flip the display to show changes to screen
         pygame.display.flip()

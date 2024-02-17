@@ -33,6 +33,9 @@ class World(object):
         # current direction of the snake
         self.current_snake_direction = None
 
+        # current score of the game
+        self.score = 0
+
         # if the game is over
         self.game_over = False
 
@@ -78,6 +81,7 @@ class World(object):
             # TODO: reset the score
             self.game_over = False
             self.current_snake_direction = None
+            self.score = 0
             self.snake.reset()
             self.edible.sprite.reset()
 
@@ -87,4 +91,6 @@ class World(object):
         self.edible.draw(self._screen)
         self.snake.draw(self._screen)
 
-        return ate
+        self.score += int(ate)
+
+        return self.score 

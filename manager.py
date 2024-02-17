@@ -30,9 +30,6 @@ class ScoreManager(object):
                                      2.5 * cell_size, 
                                      cell_size)
 
-        # the current score of the game
-        self.score = 0
-
         self.cell_number = cell_number
         self.cell_size = cell_size
 
@@ -42,7 +39,7 @@ class ScoreManager(object):
                 pygame.Vector2(self.cell_number - 2, self.cell_number - 2),
                 pygame.Vector2(self.cell_number - 1, self.cell_number - 2)]
 
-    def update(self, update_score: bool) -> None:
+    def update(self, score: bool) -> None:
         pygame.draw.rect(self.screen, 
                          ScoreManager.FILL_COLOUR, 
                          self.score_box,
@@ -50,8 +47,7 @@ class ScoreManager(object):
                          border_radius=int(self.cell_size / 4))
 
         # create the score text
-        if update_score: self.score += 1
-        text = self.font.render(f"x {self.score}", True, ScoreManager.TEXT_COLOUR)
+        text = self.font.render(f"x {score}", True, ScoreManager.TEXT_COLOUR)
         text_rect = text.get_rect(centerx=self.cell_size * (self.cell_number - 2) + self.cell_size / 2,
                                   centery=self.cell_size * (self.cell_number - 2) + self.cell_size / 2)
 
