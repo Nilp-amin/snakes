@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-import sys
 import pygame
 
 from apple import Apple
 from boundry import Boundry
 from snake import Snake
-
-from collections import deque
 
 class World(object):
     ALLOWED_MOVES = [pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d]
@@ -33,15 +30,16 @@ class World(object):
         # the boundry object
         self.boundry = Boundry(self.collidable, cell_number, cell_size) 
 
-        # queues the moves to be done in order
-        self.move_queue = deque([]) 
+        # current direction of the snake
+        self.current_snake_direction = None
 
         # if the game is over
         self.game_over = False
 
-    def add_move(self, key: int) -> None:
+
+    def set_direction(self, key: int) -> None:
         if key in World.ALLOWED_MOVES:
-            self.move_queue.append(key)
+            self.current_snake_direction = key
 
     def check_for_collisions(self) -> bool:
         colliding_sprites = pygame.sprite.spritecollide(self.snake.get_head(), self.collidable, False)
@@ -77,14 +75,13 @@ class World(object):
         ate = self.check_for_collisions()
 
         if self.game_over:
-            # FIXME: update this to not just simply exit the game
-            sys.exit(1)
+            # TODO: reset the score
+            self.game_over = False
+            self.current_snake_direction = None
+            self.snake.reset()
+            self.edible.sprite.reset()
 
-        key = None
-        if self.move_queue:
-            key = self.move_queue.popleft()
-
-        self.snake.advance_snake(key, ate)
+        self.snake.advance_snake(self.current_snake_direction, ate)
 
         self.draw_background()
         self.edible.draw(self._screen)

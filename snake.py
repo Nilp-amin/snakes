@@ -53,6 +53,9 @@ class SnakeChunk(pygame.sprite.Sprite):
     def set_texture(self, shift: pygame.Vector2) -> SnakeChunk:
         raise NotImplementedError
 
+    def reset(self, grid_pos: pygame.Vector2) -> None:
+        raise NotImplementedError
+
 class Head(SnakeChunk):
     def __init__(self, 
                  texture_map: Dict[Tuple[int, int], pygame.Surface],
@@ -70,6 +73,10 @@ class Head(SnakeChunk):
     def set_texture(self, shift: pygame.Vector2) -> SnakeChunk:
         self.image = self.texture_map[tuple(shift)]
         return self
+
+    def reset(self, grid_pos: pygame.Vector2) -> None:
+        self.set_grid_position(grid_pos)
+        self.image = self.texture_map["default"]
 
 class Body(SnakeChunk):
     def __init__(self, 
@@ -110,6 +117,11 @@ class Body(SnakeChunk):
 
         return self
 
+    def reset(self, grid_pos: pygame.Vector2) -> None:
+        self.set_grid_position(grid_pos)
+        self.set_previous_grid_position(grid_pos)
+        self.image = self.texture_map["default"]
+
 
 class Tail(SnakeChunk):
     def __init__(self, 
@@ -128,6 +140,10 @@ class Tail(SnakeChunk):
     def set_texture(self, shift: pygame.Vector2) -> SnakeChunk:
         self.image = self.texture_map[tuple(shift)]
         return self
+
+    def reset(self, grid_pos: pygame.Vector2) -> None:
+        self.set_grid_position(grid_pos)
+        self.image = self.texture_map["default"]
 
 class Snake(object):
     def __init__(self, 
@@ -210,10 +226,11 @@ class Snake(object):
         return pygame.image.load(os.path.join(os.getcwd(), "textures", f"{texture_name}.png")).convert_alpha()
 
     def advance_snake(self, direction: int, add_chunk: bool = False) -> None:
-        # FIXME: check key_shift_map for very first move as well...not allow it to go on itself
-        # make sure the direction isn't 180 deg opposite to curr dir
-        if self.current_direction is None:
-            self.current_direction = direction 
+        if self.current_direction is None and direction is not None:
+            # find the position between head and first body chunk
+            relative_position = self.chunks[1].get_grid_position() - self.chunks[0].get_grid_position()
+            if relative_position != self.key_shift_map[direction]: # make sure head does not go on itself
+                self.current_direction = direction 
         elif direction is not None and direction in self.valid_moves[self.current_direction]:
             self.current_direction = direction 
 
@@ -231,7 +248,6 @@ class Snake(object):
             old_forward_chunk_pos = pygame.Vector2(0, 0)
             for i, snake_chunk in enumerate(chunks):
                 chunk_shift = pygame.Vector2(0, 0) 
-
                 if i == 0:
                     chunk_shift = head_shift
                 else:
@@ -260,6 +276,27 @@ class Snake(object):
         self.chunks.insert(1, body_chunk)
         self.chunks_group.add(body_chunk)
         self.collidable.add(body_chunk)
+
+    def reset(self) -> None:
+        first_body_index = 1
+        tail_index = len(self.chunks) - 1
+        for i, chunk in enumerate(self.chunks.copy()):
+            # only remove the body chunks
+            if i > first_body_index and i < tail_index:
+                chunk.kill()
+                self.chunks.remove(chunk)
+            else:
+                grid_pos = pygame.Vector2(0, 0)
+                if isinstance(chunk, Head):
+                    grid_pos = pygame.Vector2(5, 5)
+                elif isinstance(chunk, Body):
+                    grid_pos = pygame.Vector2(4, 5)
+                elif isinstance(chunk, Tail):
+                    grid_pos = pygame.Vector2(3, 5)
+
+                chunk.reset(grid_pos)
+
+        self.current_direction = None
 
     def draw(self, surface: pygame.Surface) -> None:
         self.chunks_group.draw(surface)

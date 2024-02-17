@@ -28,7 +28,7 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 running = False 
             if event.type == pygame.KEYDOWN:
-                world.add_move(event.key)
+                world.set_direction(event.key)
             if event.type == pygame.USEREVENT:
                 # update the world on every time timer ticks 
                 update_score = world.update(dt)

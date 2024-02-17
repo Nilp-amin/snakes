@@ -19,7 +19,7 @@ class Apple(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(clip(apple, 7, 3, 34, 36), ((cell_size) * Apple.SCALE_FACTOR, 
                                                            cell_size * Apple.SCALE_FACTOR))
 
-        # TODO: make sure this is not the same position as the snake 
+        # FIXME: make sure this is not the same position as the snake 
         self.rect = self.image.get_rect()
         top_x = random.randint(0, (cell_number - 1)) * cell_size 
         top_y = random.randint(0, (cell_number - 1)) * cell_size 
@@ -50,3 +50,6 @@ class Apple(pygame.sprite.Sprite):
         self.rect.center = (random_position.x + self.cell_size / 2, random_position.y + self.cell_size / 2)
 
         return self
+
+    def reset(self) -> None:
+        pass
