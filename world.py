@@ -35,6 +35,8 @@ class World(object):
 
         # current score of the game
         self.score = 0
+        # number of deaths
+        self.deaths = 0
 
         # if the game is over
         self.game_over = False
@@ -82,6 +84,7 @@ class World(object):
             self.game_over = False
             self.current_snake_direction = None
             self.score = 0
+            self.deaths += 1
             self.snake.reset()
             self.edible.sprite.reset()
 
@@ -93,4 +96,4 @@ class World(object):
 
         self.score += int(ate)
 
-        return self.score 
+        return self.score, self.deaths
