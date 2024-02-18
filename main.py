@@ -9,8 +9,9 @@ if __name__ == "__main__":
     pygame.init()
     cell_number = 15
     cell_size = 120 
+    score_card_height = 100
 
-    screen = pygame.display.set_mode((cell_number * cell_size, cell_number * cell_size), pygame.SCALED)
+    screen = pygame.display.set_mode((cell_number * cell_size, (cell_number * cell_size) + score_card_height), pygame.SCALED)
     pygame.display.set_caption("Snake")
 
     SCREEN_UPDATE = pygame.USEREVENT
@@ -20,8 +21,13 @@ if __name__ == "__main__":
     running = True
     dt = 0
 
-    world = World(screen, cell_number, cell_size)
-    score_manager = ScoreManager(screen, cell_number, cell_size)
+    # set a surface for the actual game
+    world_surface = pygame.Surface((cell_number * cell_size, cell_number * cell_size), pygame.SCALED)
+    # set a surface for the UI
+    ui_surface = pygame.Surface((cell_number * cell_size, score_card_height), pygame.SCALED)
+
+    world = World(world_surface, cell_number, cell_size)
+    score_manager = ScoreManager(ui_surface, cell_number, cell_size)
     while running:
         # poll for events
         for event in pygame.event.get():
@@ -35,6 +41,8 @@ if __name__ == "__main__":
                 score_manager.update(score)
 
         # flip the display to show changes to screen
+        screen.blit(world_surface, (0, 0))
+        screen.blit(ui_surface, (0, cell_number * cell_size))
         pygame.display.flip()
 
         # Limit FPS to 60 and obtain dt for physics
