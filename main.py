@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import pygame
 
-from manager import ScoreManager 
 from world import World
+from manager import ScoreManager 
 
 if __name__ == "__main__":
     # pygame setup
