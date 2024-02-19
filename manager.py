@@ -2,10 +2,6 @@
 import os
 import pygame
 
-from apple import Apple
-
-from typing import List
-
 class ScoreManager(object):
     FILL_COLOUR = (175, 215, 90)
     TEXT_COLOUR = (255, 255, 255)

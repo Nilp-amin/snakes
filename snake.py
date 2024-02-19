@@ -223,7 +223,7 @@ class Snake(object):
         return self.chunks
 
     def load_snake_texture(self, texture_name: str) -> pygame.Surface:
-        return pygame.image.load(os.path.join(os.getcwd(), "textures", f"{texture_name}.png")).convert_alpha()
+        return pygame.image.load(os.path.join(os.path.dirname(__file__), "textures", f"{texture_name}.png")).convert_alpha()
 
     def advance_snake(self, direction: int, add_chunk: bool = False) -> None:
         if self.current_direction is None and direction is not None:

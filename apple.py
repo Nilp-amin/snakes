@@ -15,7 +15,7 @@ class Apple(pygame.sprite.Sprite):
         super().__init__()
 
         # load apple
-        apple = pygame.image.load(os.path.join(os.getcwd(), "textures", "apple.png")).convert_alpha()
+        apple = pygame.image.load(os.path.join(os.path.dirname(__file__), "textures", "apple.png")).convert_alpha()
         self.image = pygame.transform.scale(clip(apple, 7, 3, 34, 36), ((cell_size) * Apple.SCALE_FACTOR, 
                                                            cell_size * Apple.SCALE_FACTOR))
 
