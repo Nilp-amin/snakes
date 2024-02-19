@@ -48,6 +48,12 @@ class World(object):
         if key in World.ALLOWED_MOVES:
             self.current_snake_direction = key
 
+    def get_edible_position(self) -> pygame.Vector2:
+        return self.edible.sprite.get_grid_position()
+
+    def get_snake_head_position(self) -> pygame.Vector2:
+        return self.snake.get_head().get_grid_position()
+
     def check_for_collisions(self) -> bool:
         colliding_sprites = pygame.sprite.spritecollide(self.snake.get_head(), self.collidable, False)
         ate = False
@@ -76,7 +82,14 @@ class World(object):
                     grass_rect = pygame.Rect(row * self.cell_size, col * self.cell_size, self.cell_size, self.cell_size)
                     pygame.draw.rect(self.world_surface, World.GRASS_COLOUR, grass_rect)
 
-    def update(self, dt: float, graphics_on: bool=True) -> Tuple[pygame.Surface, int, int]:
+    def draw(self) -> pygame.Surface:
+        self.draw_background()
+        self.edible.draw(self.world_surface)
+        self.snake.draw(self.world_surface)
+
+        return self.world_surface
+
+    def update(self) -> Tuple[int, int, bool]:
         # FIXME: this needs to be here so that when eating a food that causes
         # extension of snake to overlap itself it ends immediatly
         ate = self.check_for_collisions()
@@ -89,13 +102,10 @@ class World(object):
             self.snake.reset()
             self.edible.sprite.reset()
 
-        self.snake.advance_snake(self.current_snake_direction, ate)
+            return self.score, self.deaths, True 
 
-        if graphics_on:
-            self.draw_background()
-            self.edible.draw(self.world_surface)
-            self.snake.draw(self.world_surface)
+        self.snake.advance_snake(self.current_snake_direction, ate)
 
         self.score += int(ate)
 
-        return self.world_surface, self.score, self.deaths
+        return self.score, self.deaths, False

@@ -34,6 +34,11 @@ class Apple(pygame.sprite.Sprite):
 
         return pygame.Vector2(x, y)
 
+    def get_grid_position(self) -> pygame.Vector2:
+        x, y = self.rect.center
+        return pygame.Vector2(int((x - self.cell_size / 2) / self.cell_size), 
+                              int((y - self.cell_size / 2) / self.cell_size))
+
     def set_grid_position(self, position: pygame.Vector2) -> Apple:
         x, y = position
         top_x = x * self.cell_size 

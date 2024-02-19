@@ -22,6 +22,11 @@ if __name__ == "__main__":
 
     world = World(cell_number, cell_size)
     score_manager = ScoreManager(cell_number, cell_size)
+
+    # draw inital game environment so it can be viewed immediatly
+    screen.blit(world.draw(), (0, 0)) 
+    screen.blit(score_manager.update(0, 0), (0, cell_number * cell_size))
+    pygame.display.flip()
     while running:
         # poll for events
         for event in pygame.event.get():
@@ -31,11 +36,10 @@ if __name__ == "__main__":
                 world.set_direction(event.key)
             if event.type == pygame.USEREVENT:
                 # update the world on every time timer ticks 
-                world_surface, score, deaths = world.update(dt)
-                ui_surface = score_manager.update(score, deaths)
+                score, deaths, _ = world.update()
 
-                screen.blit(world_surface, (0, 0))
-                screen.blit(ui_surface, (0, cell_number * cell_size))
+                screen.blit(world.draw(), (0, 0))
+                screen.blit(score_manager.update(score, deaths), (0, cell_number * cell_size))
 
                 # flip the display to show changes to screen
                 pygame.display.flip()

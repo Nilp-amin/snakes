@@ -10,6 +10,11 @@ class Wall(pygame.sprite.Sprite):
         x, y = grid_pos
         self.rect = pygame.Rect(x * cell_size, y * cell_size, cell_size, cell_size)
 
+    def get_grid_position(self) -> pygame.Vector2:
+        x, y = self.rect.center
+        return pygame.Vector2(int((x - self.cell_size / 2) / self.cell_size), 
+                              int((y - self.cell_size / 2) / self.cell_size))
+
 class Boundry(object):
     def __init__(self, 
                  collidable: pygame.sprite.Group, 

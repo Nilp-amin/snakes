@@ -12,7 +12,7 @@ class ScoreManager(object):
         self.ui_surface = pygame.Surface((cell_number * cell_size, ScoreManager.SCORE_CARD_HEIGHT), pygame.SCALED)
 
         # text font
-        font_path = os.path.join(os.getcwd(), "fonts", "RobotoMono-Regular.ttf")
+        font_path = os.path.join(os.path.dirname(__file__), "fonts", "RobotoMono-Regular.ttf")
         self.font = pygame.font.Font(font_path, ScoreManager.TEXT_SIZE)
 
         self.cell_number = cell_number
