@@ -5,13 +5,15 @@ from apple import Apple
 from boundry import Boundry
 from snake import Snake
 
+from typing import Tuple
+
 class World(object):
     ALLOWED_MOVES = [pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d]
     BACKGROUND_COLOUR = (175, 215, 70)
     GRASS_COLOUR = (167, 209, 61)
-    def __init__(self, screen: pygame.display, cell_number: int, cell_size: int):
+    def __init__(self, cell_number: int, cell_size: int):
         # the game screen
-        self._screen = screen
+        self.world_surface = pygame.Surface((cell_number * cell_size, cell_number * cell_size), pygame.SCALED)
         self.cell_number = cell_number
         self.cell_size = cell_size
         
@@ -65,22 +67,21 @@ class World(object):
 
     def draw_background(self) -> None:
         # set background colour of world 
-        self._screen.fill(World.BACKGROUND_COLOUR)
+        self.world_surface.fill(World.BACKGROUND_COLOUR)
 
         # set alternating grass pattern
         for row in range(self.cell_number):
             for col in range(self.cell_number):
                 if (row + col) % 2 == 0:
                     grass_rect = pygame.Rect(row * self.cell_size, col * self.cell_size, self.cell_size, self.cell_size)
-                    pygame.draw.rect(self._screen, World.GRASS_COLOUR, grass_rect)
+                    pygame.draw.rect(self.world_surface, World.GRASS_COLOUR, grass_rect)
 
-    def update(self, dt: float) -> bool:
+    def update(self, dt: float, graphics_on: bool=True) -> Tuple[pygame.Surface, int, int]:
         # FIXME: this needs to be here so that when eating a food that causes
         # extension of snake to overlap itself it ends immediatly
         ate = self.check_for_collisions()
 
         if self.game_over:
-            # TODO: reset the score
             self.game_over = False
             self.current_snake_direction = None
             self.score = 0
@@ -90,10 +91,11 @@ class World(object):
 
         self.snake.advance_snake(self.current_snake_direction, ate)
 
-        self.draw_background()
-        self.edible.draw(self._screen)
-        self.snake.draw(self._screen)
+        if graphics_on:
+            self.draw_background()
+            self.edible.draw(self.world_surface)
+            self.snake.draw(self.world_surface)
 
         self.score += int(ate)
 
-        return self.score, self.deaths
+        return self.world_surface, self.score, self.deaths
